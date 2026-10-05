@@ -7,32 +7,32 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="hero">
-    <div>
-      <p class="eyebrow">THESIS PROJECT</p>
-      <h1>Thesis Timeline</h1>
-      <p class="subtitle">Plan tasks, assign members, and monitor progress in real time.</p>
-    </div>
-    <button id="addTaskBtn" class="primary">+ Add Task</button>
+  <header class="topbar">
+    <a class="brand" href="index.html">Thesis Timeline</a>
+    <nav>
+      <a class="active" href="index.html">Timeline</a>
+      <a href="leader.html">Leader Dashboard</a>
+    </nav>
   </header>
 
-  <main class="container">
-    <section class="summary">
-      <div class="card"><span>Total Tasks</span><strong id="totalTasks">0</strong></div>
-      <div class="card"><span>Completed</span><strong id="completedTasks">0</strong></div>
-      <div class="card"><span>In Progress</span><strong id="progressTasks">0</strong></div>
-      <div class="card"><span>Pending</span><strong id="pendingTasks">0</strong></div>
-    </section>
+  <section class="hero">
+    <div>
+      <p class="eyebrow">THESIS PROJECT</p>
+      <h1>Project Timeline</h1>
+      <p>Shared tasks and progress update in real time.</p>
+    </div>
+  </section>
 
+  <main class="container">
     <section class="connection-card">
       <span id="connectionDot" class="dot"></span>
-      <span id="connectionText">Connecting to Firebase…</span>
+      <span id="connectionText">Connecting…</span>
     </section>
 
     <section class="toolbar">
       <div>
-        <h2>Project Schedule</h2>
-        <p>Changes are shared through Firebase Firestore.</p>
+        <h2>Timeline</h2>
+        <p>Click a task to view its details.</p>
       </div>
       <div class="filters">
         <input id="searchInput" type="search" placeholder="Search task or member">
@@ -46,71 +46,21 @@
     </section>
 
     <section id="timeline" class="timeline"></section>
-
     <section id="emptyState" class="empty hidden">
       <h3>No tasks found</h3>
-      <p>Add a task or change your filters.</p>
     </section>
   </main>
 
-  <dialog id="taskDialog">
-    <form id="taskForm">
+  <dialog id="viewDialog">
+    <div class="dialog-body">
       <div class="dialog-head">
-        <h2 id="dialogTitle">Add Task</h2>
-        <button type="button" id="closeDialog" class="icon-btn" aria-label="Close">×</button>
+        <h2 id="viewTitle">Task</h2>
+        <button id="closeView" class="icon-btn">×</button>
       </div>
-
-      <input type="hidden" id="taskId">
-
-      <label>
-        Task
-        <input id="taskTitle" type="text" required placeholder="e.g. Revise Chapter 1">
-      </label>
-
-      <label>
-        Assigned Member
-        <input id="taskMember" type="text" required placeholder="e.g. Maria">
-      </label>
-
-      <div class="grid2">
-        <label>
-          Start Date
-          <input id="startDate" type="date" required>
-        </label>
-        <label>
-          Deadline
-          <input id="endDate" type="date" required>
-        </label>
-      </div>
-
-      <div class="grid2">
-        <label>
-          Status
-          <select id="taskStatus">
-            <option>Pending</option>
-            <option>In Progress</option>
-            <option>Completed</option>
-          </select>
-        </label>
-        <label>
-          Progress
-          <input id="taskProgress" type="number" min="0" max="100" value="0">
-        </label>
-      </div>
-
-      <label>
-        Notes
-        <textarea id="taskNotes" rows="3" placeholder="Optional notes"></textarea>
-      </label>
-
-      <div class="dialog-actions">
-        <button type="button" id="deleteTaskBtn" class="danger hidden">Delete</button>
-        <button type="button" id="cancelBtn" class="secondary">Cancel</button>
-        <button type="submit" class="primary">Save Task</button>
-      </div>
-    </form>
+      <div id="viewContent"></div>
+    </div>
   </dialog>
 
-  <script type="module" src="script.js"></script>
+  <script type="module" src="timeline.js"></script>
 </body>
 </html>
