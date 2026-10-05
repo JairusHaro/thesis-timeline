@@ -8,6 +8,7 @@
   --accent:#2563eb;
   --accent2:#eaf1ff;
   --danger:#dc2626;
+  --success:#16a34a;
   --shadow:0 10px 30px rgba(15,23,42,.08);
 }
 body{
@@ -34,17 +35,28 @@ body{
   display:grid;
   grid-template-columns:repeat(4,1fr);
   gap:16px;
-  margin-bottom:24px;
+  margin-bottom:16px;
 }
-.card{
+.card,.connection-card{
   background:var(--card);
   border:1px solid var(--line);
   border-radius:18px;
-  padding:22px;
   box-shadow:var(--shadow);
 }
+.card{padding:22px}
 .card span{display:block;color:var(--muted);font-size:.9rem}
 .card strong{display:block;font-size:2rem;margin-top:6px}
+.connection-card{
+  padding:13px 16px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  color:var(--muted);
+  font-size:.9rem;
+}
+.dot{width:10px;height:10px;border-radius:50%;background:#f59e0b}
+.dot.connected{background:var(--success)}
+.dot.error{background:var(--danger)}
 .toolbar{
   display:flex;
   justify-content:space-between;
@@ -64,10 +76,7 @@ input,select,textarea{
   background:white;
 }
 .filters input{min-width:220px}
-.timeline{
-  position:relative;
-  padding-left:32px;
-}
+.timeline{position:relative;padding-left:32px}
 .timeline:before{
   content:"";
   position:absolute;
@@ -101,12 +110,7 @@ input,select,textarea{
   background:var(--accent);
   border:4px solid var(--bg);
 }
-.item-top{
-  display:flex;
-  justify-content:space-between;
-  gap:16px;
-  align-items:flex-start;
-}
+.item-top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}
 .timeline-item h3{margin:0 0 7px;font-size:1.08rem}
 .meta{color:var(--muted);font-size:.9rem}
 .badge{
@@ -122,19 +126,8 @@ input,select,textarea{
 }
 .badge.completed{background:#e8f7ee;color:#15803d}
 .badge.pending{background:#fff4df;color:#b45309}
-.progress-row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-top:15px;
-}
-.progress{
-  height:9px;
-  background:#edf0f5;
-  border-radius:99px;
-  overflow:hidden;
-  flex:1;
-}
+.progress-row{display:flex;align-items:center;gap:12px;margin-top:15px}
+.progress{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden;flex:1}
 .progress > div{height:100%;background:var(--accent);border-radius:99px}
 .notes{margin:12px 0 0;color:#475569;font-size:.92rem}
 button{
@@ -164,11 +157,7 @@ label{display:block;font-size:.9rem;font-weight:700;margin-top:15px}
 label input,label select,label textarea{margin-top:7px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
-.empty{
-  text-align:center;
-  padding:50px 20px;
-  color:var(--muted);
-}
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
 .hidden{display:none!important}
 @media(max-width:760px){
   .hero{align-items:flex-start;flex-direction:column}

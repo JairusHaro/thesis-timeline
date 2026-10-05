@@ -9,9 +9,9 @@
 <body>
   <header class="hero">
     <div>
-      <p class="eyebrow">MANGGRADE : A CNN BASED MOBILE APPLICATION</p>
+      <p class="eyebrow">THESIS PROJECT</p>
       <h1>Thesis Timeline</h1>
-      <p class="subtitle">Plan tasks, assign members, and monitor progress.</p>
+      <p class="subtitle">Plan tasks, assign members, and monitor progress in real time.</p>
     </div>
     <button id="addTaskBtn" class="primary">+ Add Task</button>
   </header>
@@ -24,10 +24,15 @@
       <div class="card"><span>Pending</span><strong id="pendingTasks">0</strong></div>
     </section>
 
+    <section class="connection-card">
+      <span id="connectionDot" class="dot"></span>
+      <span id="connectionText">Connecting to Firebase…</span>
+    </section>
+
     <section class="toolbar">
       <div>
         <h2>Project Schedule</h2>
-        <p>Changes are saved in this browser.</p>
+        <p>Changes are shared through Firebase Firestore.</p>
       </div>
       <div class="filters">
         <input id="searchInput" type="search" placeholder="Search task or member">
@@ -49,7 +54,7 @@
   </main>
 
   <dialog id="taskDialog">
-    <form id="taskForm" method="dialog">
+    <form id="taskForm">
       <div class="dialog-head">
         <h2 id="dialogTitle">Add Task</h2>
         <button type="button" id="closeDialog" class="icon-btn" aria-label="Close">×</button>
@@ -106,6 +111,6 @@
     </form>
   </dialog>
 
-  <script src="script.js"></script>
+  <script type="module" src="script.js"></script>
 </body>
 </html>

@@ -1,54 +1,50 @@
-const STORAGE_KEY = "thesisTimelineTasks";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const sampleTasks = [
-  {
-    id: crypto.randomUUID(),
-    title: "Finalize Chapter 1",
-    member: "Member 1",
-    start: "2026-10-05",
-    end: "2026-10-09",
-    status: "In Progress",
-    progress: 60,
-    notes: "Review background, objectives, and scope."
-  },
-  {
-    id: crypto.randomUUID(),
-    title: "Complete Related Literature",
-    member: "Member 2",
-    start: "2026-10-08",
-    end: "2026-10-15",
-    status: "Pending",
-    progress: 20,
-    notes: "Add recent references and verify citations."
-  },
-  {
-    id: crypto.randomUUID(),
-    title: "System Prototype Testing",
-    member: "Member 3",
-    start: "2026-10-16",
-    end: "2026-10-22",
-    status: "Pending",
-    progress: 0,
-    notes: "Prepare test cases and record results."
-  }
-];
+const firebaseConfig = {
+  apiKey: "AIzaSyCf1KQq0XmEbAxYzHgl0HLmmeR5FCoOnsE",
+  authDomain: "thesis-timeline-9e35c.firebaseapp.com",
+  projectId: "thesis-timeline-9e35c",
+  storageBucket: "thesis-timeline-9e35c.firebasestorage.app",
+  messagingSenderId: "688520146551",
+  appId: "1:688520146551:web:4de73a5a221a13d8ae6072",
+  measurementId: "G-58ZNYPFDXJ"
+};
 
-let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null") || sampleTasks;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const tasksRef = collection(db, "tasks");
+
+let tasks = [];
 
 const timeline = document.getElementById("timeline");
 const emptyState = document.getElementById("emptyState");
 const dialog = document.getElementById("taskDialog");
 const form = document.getElementById("taskForm");
 const deleteBtn = document.getElementById("deleteTaskBtn");
-
-function saveTasks() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-}
+const connectionDot = document.getElementById("connectionDot");
+const connectionText = document.getElementById("connectionText");
 
 function formatDate(value) {
+  if (!value) return "";
   return new Date(value + "T00:00:00").toLocaleDateString(undefined, {
     year: "numeric", month: "short", day: "numeric"
   });
+}
+
+function escapeHtml(value = "") {
+  return String(value).replace(/[&<>"']/g, c => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+  })[c]);
 }
 
 function render() {
@@ -58,14 +54,16 @@ function render() {
   const filtered = tasks
     .filter(t => status === "all" || t.status === status)
     .filter(t =>
-      t.title.toLowerCase().includes(search) ||
-      t.member.toLowerCase().includes(search)
+      String(t.title || "").toLowerCase().includes(search) ||
+      String(t.member || "").toLowerCase().includes(search)
     )
-    .sort((a,b) => new Date(a.start) - new Date(b.start));
+    .sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
 
   timeline.innerHTML = filtered.map(t => {
     const badgeClass = t.status === "Completed" ? "completed" :
                        t.status === "Pending" ? "pending" : "";
+    const progress = Math.max(0, Math.min(100, Number(t.progress || 0)));
+
     return `
       <article class="timeline-item" data-id="${t.id}">
         <div class="item-top">
@@ -75,11 +73,11 @@ function render() {
               ${formatDate(t.start)} → ${formatDate(t.end)} · ${escapeHtml(t.member)}
             </div>
           </div>
-          <span class="badge ${badgeClass}">${t.status}</span>
+          <span class="badge ${badgeClass}">${escapeHtml(t.status)}</span>
         </div>
         <div class="progress-row">
-          <div class="progress"><div style="width:${Number(t.progress)}%"></div></div>
-          <strong>${Number(t.progress)}%</strong>
+          <div class="progress"><div style="width:${progress}%"></div></div>
+          <strong>${progress}%</strong>
         </div>
         ${t.notes ? `<p class="notes">${escapeHtml(t.notes)}</p>` : ""}
       </article>
@@ -89,19 +87,23 @@ function render() {
   emptyState.classList.toggle("hidden", filtered.length > 0);
 
   document.getElementById("totalTasks").textContent = tasks.length;
-  document.getElementById("completedTasks").textContent = tasks.filter(t => t.status === "Completed").length;
-  document.getElementById("progressTasks").textContent = tasks.filter(t => t.status === "In Progress").length;
-  document.getElementById("pendingTasks").textContent = tasks.filter(t => t.status === "Pending").length;
+  document.getElementById("completedTasks").textContent =
+    tasks.filter(t => t.status === "Completed").length;
+  document.getElementById("progressTasks").textContent =
+    tasks.filter(t => t.status === "In Progress").length;
+  document.getElementById("pendingTasks").textContent =
+    tasks.filter(t => t.status === "Pending").length;
 
   document.querySelectorAll(".timeline-item").forEach(item => {
     item.addEventListener("click", () => openEdit(item.dataset.id));
   });
 }
 
-function escapeHtml(value="") {
-  return value.replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  })[c]);
+function setConnection(state, message) {
+  connectionText.textContent = message;
+  connectionDot.className = "dot";
+  if (state === "connected") connectionDot.classList.add("connected");
+  if (state === "error") connectionDot.classList.add("error");
 }
 
 function openNew() {
@@ -118,31 +120,31 @@ function openEdit(id) {
   if (!task) return;
 
   document.getElementById("taskId").value = task.id;
-  document.getElementById("taskTitle").value = task.title;
-  document.getElementById("taskMember").value = task.member;
-  document.getElementById("startDate").value = task.start;
-  document.getElementById("endDate").value = task.end;
-  document.getElementById("taskStatus").value = task.status;
-  document.getElementById("taskProgress").value = task.progress;
+  document.getElementById("taskTitle").value = task.title || "";
+  document.getElementById("taskMember").value = task.member || "";
+  document.getElementById("startDate").value = task.start || "";
+  document.getElementById("endDate").value = task.end || "";
+  document.getElementById("taskStatus").value = task.status || "Pending";
+  document.getElementById("taskProgress").value = Number(task.progress || 0);
   document.getElementById("taskNotes").value = task.notes || "";
   document.getElementById("dialogTitle").textContent = "Edit Task";
   deleteBtn.classList.remove("hidden");
   dialog.showModal();
 }
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const id = document.getElementById("taskId").value;
   const task = {
-    id: id || crypto.randomUUID(),
     title: document.getElementById("taskTitle").value.trim(),
     member: document.getElementById("taskMember").value.trim(),
     start: document.getElementById("startDate").value,
     end: document.getElementById("endDate").value,
     status: document.getElementById("taskStatus").value,
     progress: Math.max(0, Math.min(100, Number(document.getElementById("taskProgress").value || 0))),
-    notes: document.getElementById("taskNotes").value.trim()
+    notes: document.getElementById("taskNotes").value.trim(),
+    updatedAt: serverTimestamp()
   };
 
   if (task.end < task.start) {
@@ -150,23 +152,34 @@ form.addEventListener("submit", (e) => {
     return;
   }
 
-  const existing = tasks.findIndex(t => t.id === id);
-  if (existing >= 0) tasks[existing] = task;
-  else tasks.push(task);
-
-  saveTasks();
-  render();
-  dialog.close();
+  try {
+    if (id) {
+      await updateDoc(doc(db, "tasks", id), task);
+    } else {
+      await addDoc(tasksRef, {
+        ...task,
+        createdAt: serverTimestamp()
+      });
+    }
+    dialog.close();
+  } catch (error) {
+    console.error(error);
+    alert("Could not save the task. Check Firestore and its security rules.");
+  }
 });
 
-deleteBtn.addEventListener("click", () => {
+deleteBtn.addEventListener("click", async () => {
   const id = document.getElementById("taskId").value;
   if (!id) return;
+
   if (confirm("Delete this task?")) {
-    tasks = tasks.filter(t => t.id !== id);
-    saveTasks();
-    render();
-    dialog.close();
+    try {
+      await deleteDoc(doc(db, "tasks", id));
+      dialog.close();
+    } catch (error) {
+      console.error(error);
+      alert("Could not delete the task. Check Firestore and its security rules.");
+    }
   }
 });
 
@@ -176,4 +189,21 @@ document.getElementById("cancelBtn").addEventListener("click", () => dialog.clos
 document.getElementById("searchInput").addEventListener("input", render);
 document.getElementById("statusFilter").addEventListener("change", render);
 
-render();
+onSnapshot(
+  tasksRef,
+  (snapshot) => {
+    tasks = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    setConnection("connected", "Connected — timeline updates in real time");
+    render();
+  },
+  (error) => {
+    console.error(error);
+    setConnection("error", "Firebase connection failed — check Firestore setup and rules");
+    timeline.innerHTML = "";
+    emptyState.classList.remove("hidden");
+    emptyState.innerHTML = `
+      <h3>Cannot load tasks</h3>
+      <p>Open Firebase → Firestore Database and check that the database exists and allows access.</p>
+    `;
+  }
+);
