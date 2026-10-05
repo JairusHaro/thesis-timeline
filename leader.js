@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-  getFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp
+  initializeFirestore, collection, addDoc, updateDoc, doc, onSnapshot, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -16,7 +16,9 @@ const firebaseConfig = {
 const CACHE_KEY = "thesisLeaderTasksCacheV1";
 
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true
+});
 const tasksRef = collection(db, "tasks");
 
 let tasks = [];
@@ -232,15 +234,24 @@ if (!hadCache) {
   setConnection("loading", "Connecting to Firebase…");
 }
 
+const connectionTimeout = setTimeout(() => {
+  const text = document.getElementById("connectionText");
+  if (text && text.textContent.includes("Connecting")) {
+    setConnection("error", "Connection is taking too long — refresh once or check your network");
+  }
+}, 8000);
+
 onSnapshot(
   tasksRef,
   snapshot => {
+    clearTimeout(connectionTimeout);
     tasks = snapshot.docs.map(d => ({ id:d.id, ...d.data() }));
     saveCache();
     setConnection("connected", "Connected — dashboard is up to date");
     render();
   },
   err => {
+    clearTimeout(connectionTimeout);
     console.error(err);
     setConnection(
       "error",
